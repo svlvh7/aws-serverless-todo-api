@@ -18,7 +18,6 @@ A serverless REST API for managing to-do items, secured with Amazon Cognito and 
 - [Teardown](#teardown)
 - [Repository Structure](#repository-structure)
 - [Lessons Learned](#lessons-learned)
-- [License](#license)
 
 ## Solution Overview
 
@@ -156,6 +155,3 @@ Resources were deleted after the demo to stop charges. Order and commands: [`doc
 
 <!-- 3-5 honest bullets: what broke, what you would do differently, what you learned about cost. -->
 
-## License
-
-Apache-2.0 (or MIT) — see [LICENSE](LICENSE).
