@@ -1,4 +1,7 @@
+# Serverless To-Do REST API on AWS
+
 A serverless REST API for managing to-do items, secured with Amazon Cognito and AWS WAF, backed by DynamoDB, traced with AWS X-Ray, and delivered through Amazon CloudFront.
+
 **Region:** eu-central-1 (WAF web ACL for CloudFront lives in us-east-1) · **Built with:** AWS Management Console · **Live demo / video:** `<link or "not deployed">`
 
 ## Table of Contents
@@ -25,23 +28,24 @@ A serverless REST API for managing to-do items, secured with Amazon Cognito and 
 (token auth, edge protection, serverless scaling, single-table design, tracing, cost control). -->
 
 ## Architecture Diagram
+<img width="4323" height="2140" alt="Serverless REST API Architecture" src="https://github.com/user-attachments/assets/1e529e32-e085-41f2-879c-51ae2ffa1831" />
 
-<img width="4323" height="2140" alt="Serverless REST API Architecture" src="https://github.com/user-attachments/assets/f7246e42-97fd-4032-bcf4-79945fd879d1" />
 
-Editable source: https://lucid.app/lucidchart/2733f9d1-730d-4e13-ad8b-ea3f0b4b05a9/edit?viewport_loc=-2863%2C-381%2C2449%2C1272%2C0_0&invitationId=inv_e5b5e0be-9710-49a0-a462-5571f41660de
+- Editable source: 
+https://lucid.app/lucidchart/2733f9d1-730d-4e13-ad8b-ea3f0b4b05a9/edit?viewport_loc=-2683%2C-673%2C2542%2C1763%2C0_0&invitationId=inv_e5b5e0be-9710-49a0-a462-5571f41660de
 
 ## Request Flow
 
-<!-- Match the numbered circles in your diagram. -->
+Numbers match the circles in the diagram.
 
 1. User opens the site from the internet.
-2. Request reaches **CloudFront**, inspected by **AWS WAF** (rate limit + managed OWASP rules).
-3. Static content (HTML/JS) is served from a private **S3** bucket through Origin Access Control.
-4. User signs up / signs in through the **Cognito** hosted UI and receives JWT tokens.
-5. Browser calls `/api/*` with the ID token; CloudFront forwards to **API Gateway**, whose Cognito authorizer validates the token.
+2. Request reaches **CloudFront**, inspected by **AWS WAF** (rate limit + AWS managed Common rule set).
+3. Static content (HTML/JS) is served from a private **S3** bucket through Origin Access Control (default behavior).
+4. User signs up / signs in through the **Cognito** hosted UI (authorization code + PKCE) and receives JWT tokens.
+5. Browser calls `/api/*` with the ID token; CloudFront forwards to **API Gateway**, whose **Cognito User Pool authorizer** validates the token.
 6. API Gateway invokes **Lambda 1** (CRUD handler).
 7. Lambda 1 reads and writes **DynamoDB**; **DynamoDB Streams** triggers **Lambda 2** (audit/stream processor).
-8. API Gateway and both Lambdas emit traces to **X-Ray**; metrics and logs go to **CloudWatch**, which the admin/DevOps user reviews.
+8. API Gateway and both Lambdas emit traces to **X-Ray**; metrics, logs and alarms go to **CloudWatch** (alarms notify via **SNS**). The admin/DevOps user reviews traces in X-Ray and logs, metrics and alarms in CloudWatch.
 
 ## AWS Services Used
 
@@ -51,7 +55,7 @@ Editable source: https://lucid.app/lucidchart/2733f9d1-730d-4e13-ad8b-ea3f0b4b05
 | AWS WAF | Rate-based rule + AWS managed Common rule set |
 | Amazon S3 | Private static frontend bucket |
 | Amazon Cognito | User pool, hosted UI, JWT tokens |
-| Amazon API Gateway (REST) | Routes, Cognito authorizer, throttling, usage plan, optional caching |
+| Amazon API Gateway (REST) | Routes, Cognito User Pool authorizer, throttling, usage plan, optional caching |
 | AWS Lambda (x2) | CRUD handler; DynamoDB Streams consumer |
 | Amazon DynamoDB | On-demand table, GSI, Streams |
 | AWS X-Ray | Distributed tracing and service map |
@@ -66,8 +70,10 @@ Editable source: https://lucid.app/lucidchart/2733f9d1-730d-4e13-ad8b-ea3f0b4b05
 - **Why DynamoDB on-demand:** ...
 - **Why CloudFront in front of API Gateway:** ...
 - **Why OAC and a private bucket:** ...
+- **Why a Cognito User Pool authorizer:** ... (REST APIs use User Pool authorizers with the ID token; JWT authorizers are an HTTP API feature)
 - **Why Lambda outside a VPC:** ...
 - **Why arm64 Lambda:** ...
+- **WAF scope and bot protection:** Rate-based rule and the Common rule set are used as the low-cost mitigation. WAF Bot Control and geo blocking were considered; Bot Control carries a separate subscription cost, and geo blocking is a one-rule addition for production. ...
 - **Trade-offs and what I would change for production:** ...
 
 ## Data Model
@@ -79,28 +85,30 @@ Editable source: https://lucid.app/lucidchart/2733f9d1-730d-4e13-ad8b-ea3f0b4b05
 | `title` | String | |
 | `status` | String | `open` / `done` |
 | `createdAt` | String | ISO 8601 |
+| `statusCreatedAt` | String | GSI sort key, format `status#createdAt`, e.g. `open#2026-10-22T15:00:00Z` |
 
-**GSI `userId-status-index`:** PK `userId`, SK `status#createdAt`, used to list tasks by status without a scan.
+**GSI `userId-status-index`:** PK `userId`, SK `statusCreatedAt` (value `status#createdAt`), projection All. Used to list tasks by status without a scan.
 
 ## API Reference
 
 | Method | Path | Description | Auth |
 |---|---|---|---|
-| GET | `/todos` | List current user's tasks | Cognito JWT |
-| POST | `/todos` | Create a task | Cognito JWT |
-| GET | `/todos/{id}` | Get one task | Cognito JWT |
-| PUT | `/todos/{id}` | Update a task | Cognito JWT |
-| DELETE | `/todos/{id}` | Delete a task | Cognito JWT |
+| GET | `/todos` | List current user's tasks | Cognito ID token |
+| POST | `/todos` | Create a task | Cognito ID token |
+| GET | `/todos/{id}` | Get one task | Cognito ID token |
+| PUT | `/todos/{id}` | Update a task | Cognito ID token |
+| DELETE | `/todos/{id}` | Delete a task | Cognito ID token |
 
 Full details and examples: [`docs/api-reference.md`](docs/api-reference.md) · OpenAPI export: [`deployment/openapi.yaml`](deployment/openapi.yaml)
 
 ## Security
 
-- Authentication with Cognito; every API route requires a valid JWT
+- Authentication with Cognito; every API route requires a valid token, checked by the User Pool authorizer
 - WAF rate limiting and managed rules at the edge
 - S3 bucket private; access only through CloudFront OAC
-- Per-user data isolation using `userId` from the token, never from the request body
+- Per-user data isolation using `userId` from the token claims, never from the request body
 - Least-privilege IAM roles scoped to the table and index ARNs
+- API Gateway usage plan and stage throttling limit abuse per client
 - HTTPS only; no secrets in the repo
 
 Details and Well-Architected Security Pillar mapping: [`docs/security.md`](docs/security.md)
@@ -110,6 +118,7 @@ Details and Well-Architected Security Pillar mapping: [`docs/security.md`](docs/
 - X-Ray service map: ![service map](docs/screenshots/xx-xray-service-map.png)
 - CloudWatch dashboard: ![dashboard](docs/screenshots/xx-cloudwatch-dashboard.png)
 - Alarms: API 5xx and Lambda errors notify via SNS email
+- Log retention set to 7 days to control cost
 
 ## Cost Analysis
 
@@ -145,7 +154,10 @@ Resources were deleted after the demo to stop charges. Order and commands: [`doc
 ## Repository Structure
 
 ```
-├── source/lambda/        # Lambda functions
+├── README.md
+├── architecture.png
+├── architecture.pdf
+├── source/lambda/        # Lambda functions (todo-crud, stream-processor)
 ├── source/frontend/      # static site
 ├── deployment/           # exported configs and policies
 └── docs/                 # guides, screenshots, cost analysis
@@ -154,4 +166,3 @@ Resources were deleted after the demo to stop charges. Order and commands: [`doc
 ## Lessons Learned
 
 <!-- 3-5 honest bullets: what broke, what you would do differently, what you learned about cost. -->
-
