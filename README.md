@@ -1,5 +1,3 @@
-# Serverless To-Do REST API on AWS Cloud
-
 A serverless REST API for managing to-do items, secured with Amazon Cognito and AWS WAF, backed by DynamoDB, traced with AWS X-Ray, and delivered through Amazon CloudFront.
 **Region:** eu-central-1 (WAF web ACL for CloudFront lives in us-east-1) · **Built with:** AWS Management Console · **Live demo / video:** `<link or "not deployed">`
 
@@ -29,7 +27,7 @@ A serverless REST API for managing to-do items, secured with Amazon Cognito and 
 
 ## Architecture Diagram
 
-![Architecture](architecture.png)
+<img width="4323" height="2140" alt="Serverless REST API Architecture" src="https://github.com/user-attachments/assets/f7246e42-97fd-4032-bcf4-79945fd879d1" />
 
 Editable source: https://lucid.app/lucidchart/2733f9d1-730d-4e13-ad8b-ea3f0b4b05a9/edit?viewport_loc=-2863%2C-381%2C2449%2C1272%2C0_0&invitationId=inv_e5b5e0be-9710-49a0-a462-5571f41660de
 
