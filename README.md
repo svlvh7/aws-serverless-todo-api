@@ -1,2 +1,164 @@
-# aws-serverless-todo-api
-Serverless To-Do REST API with AWS Cognito Auth, DynamoDB &amp; WAF
+# Serverless To-Do API on AWS
+
+A serverless REST API for managing to-do items, secured with Amazon Cognito and AWS WAF, backed by DynamoDB, traced with AWS X-Ray, and delivered through Amazon CloudFront. Built as the graduation project for the **AWS Certified Solutions Architect – Associate** course.
+
+**Region:** eu-central-1 (WAF web ACL for CloudFront lives in us-east-1) · **Built with:** AWS Management Console · **Live demo / video:** `<link or "not deployed">`
+
+## Table of Contents
+
+- [Solution Overview](#solution-overview)
+- [Architecture Diagram](#architecture-diagram)
+- [Request Flow](#request-flow)
+- [AWS Services Used](#aws-services-used)
+- [Design Decisions](#design-decisions)
+- [Data Model](#data-model)
+- [API Reference](#api-reference)
+- [Security](#security)
+- [Observability](#observability)
+- [Cost Analysis](#cost-analysis)
+- [Deployment Guide](#deployment-guide)
+- [Testing and Evidence](#testing-and-evidence)
+- [Teardown](#teardown)
+- [Repository Structure](#repository-structure)
+- [Lessons Learned](#lessons-learned)
+- [License](#license)
+
+## Solution Overview
+
+<!-- 3-5 sentences: what the app does, who it is for, and what AWS problems it demonstrates
+(token auth, edge protection, serverless scaling, single-table design, tracing, cost control). -->
+
+## Architecture Diagram
+
+![Architecture](architecture.png)
+
+Editable source: [`architecture.drawio`](architecture.drawio)
+
+## Request Flow
+
+<!-- Match the numbered circles in your diagram. -->
+
+1. User opens the site from the internet.
+2. Request reaches **CloudFront**, inspected by **AWS WAF** (rate limit + managed OWASP rules).
+3. Static content (HTML/JS) is served from a private **S3** bucket through Origin Access Control.
+4. User signs up / signs in through the **Cognito** hosted UI and receives JWT tokens.
+5. Browser calls `/api/*` with the ID token; CloudFront forwards to **API Gateway**, whose Cognito authorizer validates the token.
+6. API Gateway invokes **Lambda 1** (CRUD handler).
+7. Lambda 1 reads and writes **DynamoDB**; **DynamoDB Streams** triggers **Lambda 2** (audit/stream processor).
+8. API Gateway and both Lambdas emit traces to **X-Ray**; metrics and logs go to **CloudWatch**, which the admin/DevOps user reviews.
+
+## AWS Services Used
+
+| Service | Role in this project |
+|---|---|
+| Amazon CloudFront | CDN, single entry point, two origins (S3 and API Gateway) |
+| AWS WAF | Rate-based rule + AWS managed Common rule set |
+| Amazon S3 | Private static frontend bucket |
+| Amazon Cognito | User pool, hosted UI, JWT tokens |
+| Amazon API Gateway (REST) | Routes, Cognito authorizer, throttling, usage plan, optional caching |
+| AWS Lambda (x2) | CRUD handler; DynamoDB Streams consumer |
+| Amazon DynamoDB | On-demand table, GSI, Streams |
+| AWS X-Ray | Distributed tracing and service map |
+| Amazon CloudWatch + SNS | Logs, dashboard, alarms, email notifications |
+| AWS IAM | Least-privilege roles per function |
+
+## Design Decisions
+
+<!-- One short paragraph each. This is the section that shows Solutions Architect thinking. -->
+
+- **Why serverless:** ...
+- **Why DynamoDB on-demand:** ...
+- **Why CloudFront in front of API Gateway:** ...
+- **Why OAC and a private bucket:** ...
+- **Why Lambda outside a VPC:** ...
+- **Why arm64 Lambda:** ...
+- **Trade-offs and what I would change for production:** ...
+
+## Data Model
+
+| Attribute | Type | Notes |
+|---|---|---|
+| `userId` (PK) | String | Cognito `sub` |
+| `todoId` (SK) | String | ULID/UUID |
+| `title` | String | |
+| `status` | String | `open` / `done` |
+| `createdAt` | String | ISO 8601 |
+
+**GSI `userId-status-index`:** PK `userId`, SK `status#createdAt`, used to list tasks by status without a scan.
+
+## API Reference
+
+| Method | Path | Description | Auth |
+|---|---|---|---|
+| GET | `/todos` | List current user's tasks | Cognito JWT |
+| POST | `/todos` | Create a task | Cognito JWT |
+| GET | `/todos/{id}` | Get one task | Cognito JWT |
+| PUT | `/todos/{id}` | Update a task | Cognito JWT |
+| DELETE | `/todos/{id}` | Delete a task | Cognito JWT |
+
+Full details and examples: [`docs/api-reference.md`](docs/api-reference.md) · OpenAPI export: [`deployment/openapi.yaml`](deployment/openapi.yaml)
+
+## Security
+
+- Authentication with Cognito; every API route requires a valid JWT
+- WAF rate limiting and managed rules at the edge
+- S3 bucket private; access only through CloudFront OAC
+- Per-user data isolation using `userId` from the token, never from the request body
+- Least-privilege IAM roles scoped to the table and index ARNs
+- HTTPS only; no secrets in the repo
+
+Details and Well-Architected Security Pillar mapping: [`docs/security.md`](docs/security.md)
+
+## Observability
+
+- X-Ray service map: ![service map](docs/screenshots/xx-xray-service-map.png)
+- CloudWatch dashboard: ![dashboard](docs/screenshots/xx-cloudwatch-dashboard.png)
+- Alarms: API 5xx and Lambda errors notify via SNS email
+
+## Cost Analysis
+
+| Component | Estimated | Actual |
+|---|---|---|
+| WAF (1 ACL + 2 rules, short window) | | |
+| API Gateway cache (test window only) | | |
+| Everything else (Lambda, DynamoDB, S3, CloudFront, Cognito, X-Ray) | | |
+| **Total** | | |
+
+How costs were controlled (budgets, short-lived WAF and cache, 7-day log retention, no VPC/NAT): [`docs/cost-analysis.md`](docs/cost-analysis.md)
+
+## Deployment Guide
+
+This project was built manually in the AWS Console. Step-by-step instructions with the reasoning behind each choice: [`docs/deployment-guide.md`](docs/deployment-guide.md)
+
+Exported configurations for reproducibility are in [`deployment/`](deployment/).
+
+## Testing and Evidence
+
+| Test | Expected | Result | Evidence |
+|---|---|---|---|
+| Request without token | 401 | | screenshot |
+| Request with valid ID token | 200 | | screenshot |
+| User A cannot read User B's tasks | empty / 404 | | screenshot |
+| Rate limit exceeded | 403 from WAF | | screenshot |
+| Stream triggers Lambda 2 | log line in CloudWatch | | screenshot |
+
+## Teardown
+
+Resources were deleted after the demo to stop charges. Order and commands: [`docs/teardown-checklist.md`](docs/teardown-checklist.md)
+
+## Repository Structure
+
+```
+├── source/lambda/        # Lambda functions
+├── source/frontend/      # static site
+├── deployment/           # exported configs and policies
+└── docs/                 # guides, screenshots, cost analysis
+```
+
+## Lessons Learned
+
+<!-- 3-5 honest bullets: what broke, what you would do differently, what you learned about cost. -->
+
+## License
+
+Apache-2.0 (or MIT) — see [LICENSE](LICENSE).
