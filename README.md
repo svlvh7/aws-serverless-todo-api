@@ -15,11 +15,9 @@ A serverless REST API for managing to-do items, secured with Amazon Cognito and 
 - [Architecture Diagram](#architecture-diagram)
 - [Request Flow](#request-flow)
 - [AWS Services Used](#aws-services-used)
-- [Data Model](#data-model)
 - [API Reference](#api-reference)
 - [Security](#security)
 - [Testing and Evidence](#testing-and-evidence)
-- [Lessons Learned](#lessons-learned)
 
 ## Solution Overview
 
@@ -138,5 +136,3 @@ a
 
 
 
-## Lessons Learned
-too many things learned after completing the project, how to architect the best practicing solution for the application, what is the important things to put in thee head while building an application such as the right database type and the right deployment for the application and the right configurations all the way to the last price which is the running application from the first to the end point
