@@ -117,18 +117,6 @@ Numbers match the circles in the architecture diagram.
 - **WAF scope and bot protection:** Rate-based rule and the Common rule set are used as the low-cost mitigation. WAF Bot Control and geo blocking were considered; Bot Control carries a separate subscription cost, and geo blocking is a one-rule addition for production. ...
 - **Trade-offs and what I would change for production:** ...
 
-## Data Model
-
-| Attribute | Type | Notes |
-|---|---|---|
-| `userId` (PK) | String | Cognito `sub` |
-| `todoId` (SK) | String | ULID/UUID |
-| `title` | String | |
-| `status` | String | `open` / `done` |
-| `createdAt` | String | ISO 8601 |
-| `statusCreatedAt` | String | GSI sort key, format `status#createdAt`, e.g. `open#2026-10-22T15:00:00Z` |
-
-**GSI `userId-status-index`:** PK `userId`, SK `statusCreatedAt` (value `status#createdAt`), projection All. Used to list tasks by status without a scan.
 
 ## API Reference
 
