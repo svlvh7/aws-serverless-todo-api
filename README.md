@@ -31,7 +31,7 @@ REST API. There are no servers to manage, and the stack scales to zero when idle
   with a Cognito authorizer that validates the JWT on every request.
 - **Compute:** a Lambda function (Python) handling GET, POST, PUT and DELETE on `/todos`.
 - **Data:** a DynamoDB table (`userID` partition key, `todoID` sort key) with on-demand capacity.
-- **Protection:** AWS WAF on CloudFront with rate limiting and AWS managed rule sets
+- **Protection:** AWS WAF on CloudFront with AWS managed rule sets
   (common, known bad inputs, SQL injection, IP reputation).
 - **Observability:** X-Ray tracing, and WAF logs in CloudWatch Logs.
 
@@ -55,7 +55,7 @@ Numbers match the circles in the architecture diagram.
 
 1. **User opens the site** from the internet at the CloudFront domain.
 2. **CloudFront + AWS WAF.** Every request is inspected by AWS WAF (global scope,
-   us-east-1) before it is served. The web ACL applies a per-IP rate limit and the
+   us-east-1) before it is served. and the
    AWS managed rule sets: Common, Known Bad Inputs, SQL injection and Amazon IP
    reputation. Blocked requests receive `403` and never reach the origins.
 3. **Static content.** The default CloudFront behavior serves the single-page app
@@ -82,7 +82,7 @@ Numbers match the circles in the architecture diagram.
 
 | Situation | Where it stops | Response |
 |---|---|---|
-| Rate limit exceeded, or SQLi / XSS / bad-input pattern | WAF at CloudFront | `403` |
+|SQLi / XSS / bad-input pattern | WAF at CloudFront | `403` |
 | Missing, expired or tampered token | Cognito authorizer at API Gateway | `401` |
 | Valid user asks for another user's task | Lambda / DynamoDB key lookup | `404` |
 
@@ -91,7 +91,7 @@ Numbers match the circles in the architecture diagram.
 | Service | Role in this project |
 |---|---|
 | Amazon CloudFront | CDN, single entry point, two origins (S3 and API Gateway) |
-| AWS WAF | Rate-based rule + AWS managed Common rule set |
+| AWS WAF |  AWS managed Common rules set |
 | Amazon S3 | Private static frontend bucket |
 | Amazon Cognito | User pool, hosted UI, JWT tokens |
 | Amazon API Gateway (REST) | Routes, Cognito User Pool authorizer, throttling, usage plan, optional caching |
@@ -116,7 +116,6 @@ Numbers match the circles in the architecture diagram.
 ## Security
 
 - Authentication with Cognito; every API route requires a valid token, checked by the User Pool authorizer
-- WAF rate limiting and managed rules at the edge
 - S3 bucket private; access only through CloudFront OAC
 - Per-user data isolation using `userId` from the token claims, never from the request body
 - Least-privilege IAM roles scoped to the table and index ARNs
