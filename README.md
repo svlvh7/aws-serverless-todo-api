@@ -28,8 +28,26 @@ A serverless REST API for managing to-do items, secured with Amazon Cognito and 
 
 ## Solution Overview
 
-<!-- 3-5 sentences: what the app does, who it is for, and what AWS problems it demonstrates
-(token auth, edge protection, serverless scaling, single-table design, tracing, cost control). -->
+This project is a serverless to-do application on AWS. Users sign up and sign in
+with Amazon Cognito, then create, complete and delete their own tasks through a
+REST API. There are no servers to manage, and the stack scales to zero when idle.
+
+**How it works**
+- **Frontend:** a static single-page app in a private S3 bucket, served through CloudFront.
+- **API:** API Gateway (REST) behind the same CloudFront distribution at `/api/*`,
+  with a Cognito authorizer that validates the JWT on every request.
+- **Compute:** a Lambda function (Python) handling GET, POST, PUT and DELETE on `/todos`.
+- **Data:** a DynamoDB table (`userID` partition key, `todoID` sort key) with on-demand capacity.
+- **Protection:** AWS WAF on CloudFront with rate limiting and AWS managed rule sets
+  (common, known bad inputs, SQL injection, IP reputation).
+- **Observability:** X-Ray tracing, and WAF logs in CloudWatch Logs.
+
+**What it demonstrates**
+- Token-based authentication and per-user data isolation (the Lambda reads the
+  user id from the verified token, never from the request body).
+- Layered security: edge filtering (WAF), authentication (Cognito), authorization
+  (per-user keys), and input handling (parameterized DynamoDB calls, text-only rendering).
+- A low-cost, pay-per-use architecture built entirely in the AWS Management Console.
 
 ## Architecture Diagram
 <img width="4323" height="2140" alt="Serverless REST API Architecture" src="https://github.com/user-attachments/assets/1e529e32-e085-41f2-879c-51ae2ffa1831" />
