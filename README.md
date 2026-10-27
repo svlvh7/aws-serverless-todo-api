@@ -7,6 +7,7 @@ A serverless REST API for managing to-do items, secured with Amazon Cognito and 
 
 **Live demo / video:** https://drive.google.com/file/d/10f1RL5s1PCREJD0LlN-F7Evx77ZrtYfq/view?usp=drive_link
 
+**`Note: Resources were deleted after the demo to stop charges.`**
 
 ## Table of Contents
 
@@ -22,7 +23,6 @@ A serverless REST API for managing to-do items, secured with Amazon Cognito and 
 - [Cost Analysis](#cost-analysis)
 - [Deployment Guide](#deployment-guide)
 - [Testing and Evidence](#testing-and-evidence)
-- [Teardown](#teardown)
 - [Repository Structure](#repository-structure)
 - [Lessons Learned](#lessons-learned)
 
@@ -192,9 +192,6 @@ Exported configurations for reproducibility are in [`deployment/`](deployment/).
 | Rate limit exceeded | 403 from WAF | | screenshot |
 | Stream triggers Lambda 2 | log line in CloudWatch | | screenshot |
 
-## Teardown
-
-Resources were deleted after the demo to stop charges. Order and commands: [`docs/teardown-checklist.md`](docs/teardown-checklist.md)
 
 ## Repository Structure
 
