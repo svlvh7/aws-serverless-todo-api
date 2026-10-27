@@ -2,7 +2,7 @@
 
 A serverless REST API for managing to-do items, secured with Amazon Cognito and AWS WAF, backed by DynamoDB, traced with AWS X-Ray, and delivered through Amazon CloudFront.
 
-**Region:** eu-central-1 (WAF web ACL for CloudFront lives in us-east-1) · **Built with:** AWS Management Console ·  **Live demo / video:** [Watch the demo](demo.mp4)
+**Region:** eu-central-1 (WAF web ACL for CloudFront lives in us-east-1) · **Built with:** AWS Management Console ·  **Live demo / video:** https://drive.google.com/file/d/10f1RL5s1PCREJD0LlN-F7Evx77ZrtYfq/view?usp=drive_link
 ## Table of Contents
 
 - [Solution Overview](#solution-overview)
