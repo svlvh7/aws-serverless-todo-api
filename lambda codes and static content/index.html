@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Todo App</title>
+<style>
+  :root{
+    --bg:#f3f6fb; --card:#fff; --text:#1b2433; --muted:#6b778c; --line:#e3e8f0;
+    --blue:#2564cf; --blue-d:#1b4fa8; --red:#c62828; --green:#2e7d32; --amber:#b26a00;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Segoe UI,system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text)}
+  .wrap{max-width:640px;margin:0 auto;padding:24px 16px 80px}
+  .card{background:var(--card);border-radius:12px;box-shadow:0 1px 3px rgba(20,30,60,.08);padding:20px}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 18px}
+  input[type=text],input[type=email],input[type=password]{
+    width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;font-size:15px;background:#fff;color:var(--text)}
+  input:focus{outline:2px solid var(--blue);outline-offset:-1px;border-color:transparent}
+  label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
+  button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:10px 16px}
+  .primary{background:var(--blue);color:#fff;font-weight:600}
+  .primary:hover{background:var(--blue-d)}
+  .primary:disabled{opacity:.6;cursor:default}
+  .ghost{background:transparent;color:var(--blue)}
+  .ghost:hover{background:#eaf1fd}
+  .full{width:100%;margin-top:18px}
+  .tabs{display:flex;gap:4px;margin-bottom:8px;border-bottom:1px solid var(--line)}
+  .tab{background:none;color:var(--muted);border-radius:8px 8px 0 0;padding:10px 14px}
+  .tab.on{color:var(--blue);font-weight:600;box-shadow:inset 0 -2px 0 var(--blue)}
+  .msg{margin-top:14px;font-size:14px;padding:10px 12px;border-radius:8px;display:none}
+  .msg.err{display:block;background:#fdecea;color:var(--red)}
+  .msg.ok{display:block;background:#e8f5e9;color:var(--green)}
+  .hidden{display:none!important}
+
+  header.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px}
+  .who{font-size:13px;color:var(--muted);text-align:right}
+  .who b{color:var(--text)}
+  .add{display:flex;gap:8px;margin-bottom:12px}
+  .add input{flex:1}
+  .filters{display:flex;gap:6px;margin:6px 0 10px;flex-wrap:wrap;align-items:center}
+  .chip{background:#eef2f8;color:var(--muted);padding:6px 12px;border-radius:999px;font-size:13px}
+  .chip.on{background:var(--blue);color:#fff}
+  .spacer{flex:1}
+  ul{list-style:none;margin:0;padding:0}
+  li.task{display:flex;align-items:center;gap:12px;padding:12px 6px;border-bottom:1px solid var(--line)}
+  li.task:last-child{border-bottom:0}
+  li.task input[type=checkbox]{width:20px;height:20px;accent-color:var(--blue);cursor:pointer;flex:none}
+  li.task .t{flex:1;word-break:break-word}
+  li.task.done .t{text-decoration:line-through;color:var(--muted)}
+  li.task .del{background:none;color:var(--muted);padding:6px 10px;font-size:18px;line-height:1}
+  li.task .del:hover{color:var(--red);background:#fdecea}
+  .empty{text-align:center;color:var(--muted);padding:28px 0}
+  .count{font-size:13px;color:var(--muted);margin-top:10px}
+
+  .note{font-size:12px;color:var(--muted);margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ LOGIN ============ -->
+  <section id="auth" class="card hidden">
+    <h1>Todo App</h1>
+    <p class="sub">Sign in to manage your tasks.</p>
+
+    <div id="authTabs" class="tabs">
+      <button class="tab on" data-tab="signin">Sign in</button>
+      <button class="tab" data-tab="signup">Create account</button>
+    </div>
+
+    <form id="formSignin">
+      <label for="siEmail">Email</label>
+      <input id="siEmail" type="email" autocomplete="username" required>
+      <label for="siPass">Password</label>
+      <input id="siPass" type="password" autocomplete="current-password" required>
+      <button class="primary full" type="submit">Sign in</button>
+    </form>
+
+    <form id="formSignup" class="hidden">
+      <label for="suEmail">Email</label>
+      <input id="suEmail" type="email" autocomplete="username" required>
+      <label for="suPass">Password</label>
+      <input id="suPass" type="password" autocomplete="new-password" required>
+      <div class="note">Use the password policy you set in the user pool (default: 8+ chars, upper, lower, number, symbol).</div>
+      <button class="primary full" type="submit">Create account</button>
+    </form>
+
+    <form id="formConfirm" class="hidden">
+      <p class="sub">We emailed a verification code to <b id="confirmEmail"></b>.</p>
+      <label for="cfCode">Verification code</label>
+      <input id="cfCode" type="text" inputmode="numeric" autocomplete="one-time-code" required>
+      <button class="primary full" type="submit">Confirm</button>
+      <button class="ghost full" type="button" id="resendBtn" style="margin-top:8px">Resend code</button>
+    </form>
+
+    <form id="formNewPw" class="hidden">
+      <p class="sub">You must set a new password before continuing.</p>
+      <label for="npPass">New password</label>
+      <input id="npPass" type="password" autocomplete="new-password" required>
+      <button class="primary full" type="submit">Set password</button>
+    </form>
+
+    <div id="authMsg" class="msg"></div>
+  </section>
+
+  <!-- ============ APP ============ -->
+  <section id="app" class="hidden">
+    <header class="top">
+      <div>
+        <h1>My Tasks</h1>
+        <p class="sub" style="margin:0" id="today"></p>
+      </div>
+      <div class="who">
+        Signed in as <b id="whoEmail"></b><br>
+        <button class="ghost" id="signoutBtn" style="padding:4px 0">Sign out</button>
+      </div>
+    </header>
+
+    <div class="card">
+      <form class="add" id="addForm">
+        <input id="newTask" type="text" placeholder="Add a task" maxlength="200" autocomplete="off" required>
+        <button class="primary" type="submit">Add</button>
+      </form>
+
+      <div class="filters">
+        <button class="chip on" data-f="all">All</button>
+        <button class="chip" data-f="active">Active</button>
+        <button class="chip" data-f="done">Completed</button>
+        <span class="spacer"></span>
+        <button class="ghost" id="clearDone" style="padding:6px 10px;font-size:13px">Clear completed</button>
+      </div>
+
+      <ul id="list"></ul>
+      <div class="empty hidden" id="empty">No tasks here yet.</div>
+      <div class="count" id="count"></div>
+      <div id="appMsg" class="msg"></div>
+    </div>
+
+  </section>
+</div>
+
+<script>
+/* =====================================================================
+   CONFIG  —  fill these in, then upload this file to your S3 bucket
+   ===================================================================== */
+const CONFIG = {
+  region:   "eu-central-1",
+  clientId: "1fkpsgpc5dktp9re6ut86k3uep",   // Cognito → User pool → App clients (must have NO client secret)
+
+  apiBase:  "/api",        // same origin through CloudFront. Use the full CloudFront URL when testing locally.
+  listPath: "/todos",      // GET (list), POST (create)
+  itemPath: "/todos/",     // + id  → PUT (update), DELETE
+  updateMethod: "PUT",     // change to "PATCH" if your Lambda expects it
+
+  // Matches the Lambda: items have todoID, title, status ("pending" | "completed"), createdAt
+  doneStatus: "completed",
+  openStatus: "pending"
+};
+
+/* ============================ helpers ============================ */
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const show = (el, on=true) => el.classList.toggle("hidden", !on);
+
+function setMsg(el, text, kind){
+  el.textContent = text || "";
+  el.className = "msg" + (text ? " " + (kind || "err") : "");
+}
+function decodeJwt(t){
+  try{
+    const p = t.split(".")[1].replace(/-/g,"+").replace(/_/g,"/");
+    return JSON.parse(decodeURIComponent(atob(p).split("").map(c=>"%"+("00"+c.charCodeAt(0).toString(16)).slice(-2)).join("")));
+  }catch{ return null; }
+}
+
+/* ============================ Cognito ============================ */
+const COGNITO_URL = `https://cognito-idp.${CONFIG.region}.amazonaws.com/`;
+
+async function cognito(target, body){
+  const res = await fetch(COGNITO_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-amz-json-1.1",
+      "X-Amz-Target": "AWSCognitoIdentityProviderService." + target
+    },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok){
+    const err = new Error(data.message || data.Message || "Request failed");
+    err.code = (data.__type || "").split("#").pop();
+    throw err;
+  }
+  return data;
+}
+
+const friendly = e => ({
+  NotAuthorizedException:       "Incorrect email or password.",
+  UserNotFoundException:        "Incorrect email or password.",
+  UsernameExistsException:      "An account with this email already exists.",
+  InvalidPasswordException:     e.message,
+  CodeMismatchException:        "That code is not correct.",
+  ExpiredCodeException:         "That code has expired. Use “Resend code”.",
+  LimitExceededException:       "Too many attempts. Wait a bit and try again.",
+  TooManyRequestsException:     "Too many attempts. Wait a bit and try again.",
+  InvalidParameterException:    e.message
+}[e.code] || e.message);
+
+/* Tokens live in sessionStorage: cleared when the tab closes. */
+const store = {
+  get(){ try{ return JSON.parse(sessionStorage.getItem("tokens")||"null"); }catch{ return null; } },
+  set(t){ try{ sessionStorage.setItem("tokens", JSON.stringify(t)); }catch{} },
+  clear(){ try{ sessionStorage.removeItem("tokens"); }catch{} }
+};
+let tokens = store.get();
+
+function saveAuthResult(r, keepRefresh){
+  tokens = {
+    id: r.IdToken, access: r.AccessToken,
+    refresh: r.RefreshToken || (keepRefresh && keepRefresh.refresh),
+    exp: Date.now() + (r.ExpiresIn || 3600) * 1000
+  };
+  store.set(tokens);
+}
+
+async function getIdToken(){
+  if(!tokens) throw new Error("Not signed in");
+  if(Date.now() > tokens.exp - 60000){
+    try{
+      const r = await cognito("InitiateAuth", {
+        AuthFlow: "REFRESH_TOKEN_AUTH", ClientId: CONFIG.clientId,
+        AuthParameters: { REFRESH_TOKEN: tokens.refresh }
+      });
+      saveAuthResult(r.AuthenticationResult, tokens);
+    }catch{ signOut(); throw new Error("Session expired. Please sign in again."); }
+  }
+  return tokens.id;
+}
+
+/* ============================== API ============================== */
+async function api(method, path, body){
+  const res = await fetch(CONFIG.apiBase + path, {
+    method,
+    headers: { "Content-Type": "application/json", "Authorization": await getIdToken() },
+    body: body ? JSON.stringify(body) : undefined
+  }).catch(() => { throw new Error("Network error. Please try again."); });
+
+  if(res.status === 401){ signOut(); throw new Error("Your session expired. Please sign in again."); }
+  if(!res.ok){
+    let detail = "";
+    try{ detail = (await res.text()).slice(0, 200); }catch{}
+    if(!detail && res.status === 403) detail = "Request blocked.";
+    throw new Error(`${method} ${CONFIG.apiBase + path} failed (${res.status})` + (detail ? ": " + detail : ""));
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+/* Normalise whatever shape the Lambda returns */
+function norm(t){
+  return {
+    id: t.todoID,
+    title: t.title ?? "",
+    completed: t.status === CONFIG.doneStatus,
+    createdAt: t.createdAt || ""
+  };
+}
+const unwrapList = d => Array.isArray(d) ? d : (d && (d.items || d.todos || d.tasks || d.Items)) || [];
+
+/* ============================ Tasks UI =========================== */
+let todos = [];
+let filter = "all";
+
+function render(){
+  const list = $("#list");
+  list.replaceChildren();
+  const shown = todos.filter(t => filter==="all" ? true : filter==="done" ? t.completed : !t.completed);
+  for(const t of shown){
+    const li = document.createElement("li");
+    li.className = "task" + (t.completed ? " done" : "");
+    const cb = document.createElement("input");
+    cb.type = "checkbox"; cb.checked = t.completed;
+    cb.setAttribute("aria-label", "Mark complete");
+    cb.addEventListener("change", () => toggle(t, cb));
+    const span = document.createElement("span");
+    span.className = "t"; span.textContent = t.title;     // textContent = no XSS
+    const del = document.createElement("button");
+    del.className = "del"; del.textContent = "×"; del.title = "Delete";
+    del.addEventListener("click", () => remove(t));
+    li.append(cb, span, del);
+    list.append(li);
+  }
+  show($("#empty"), shown.length === 0);
+  const left = todos.filter(t=>!t.completed).length;
+  $("#count").textContent = todos.length ? `${left} active · ${todos.length - left} completed` : "";
+}
+
+async function load(){
+  try{
+    setMsg($("#appMsg"), "");
+    todos = unwrapList(await api("GET", CONFIG.listPath)).map(norm);
+    todos.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    render();
+  }catch(e){ setMsg($("#appMsg"), e.message); }
+}
+
+async function addTask(title){
+  try{
+    setMsg($("#appMsg"), "");
+    const created = await api("POST", CONFIG.listPath, { title, status: CONFIG.openStatus });
+    if(created && created.todoID){ todos.unshift(norm(created)); render(); }
+    else { await load(); }
+  }catch(e){ setMsg($("#appMsg"), e.message); }
+}
+
+async function toggle(t, cb){
+  const next = !t.completed;
+  try{
+    setMsg($("#appMsg"), "");
+    await api(CONFIG.updateMethod, CONFIG.itemPath + encodeURIComponent(t.id), {
+      title: t.title, status: next ? CONFIG.doneStatus : CONFIG.openStatus
+    });
+    t.completed = next; render();
+  }catch(e){ cb.checked = t.completed; setMsg($("#appMsg"), e.message); }
+}
+
+async function remove(t){
+  try{
+    setMsg($("#appMsg"), "");
+    await api("DELETE", CONFIG.itemPath + encodeURIComponent(t.id));
+    todos = todos.filter(x => x.id !== t.id); render();
+  }catch(e){ setMsg($("#appMsg"), e.message); }
+}
+
+$("#addForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const input = $("#newTask"); const v = input.value.trim();
+  if(!v) return;
+  input.value = ""; await addTask(v); input.focus();
+});
+$$(".chip[data-f]").forEach(b => b.addEventListener("click", () => {
+  filter = b.dataset.f;
+  $$(".chip[data-f]").forEach(x => x.classList.toggle("on", x === b));
+  render();
+}));
+$("#clearDone").addEventListener("click", async () => {
+  for(const t of todos.filter(t=>t.completed)) await remove(t);
+});
+
+/* ============================ Auth UI ============================ */
+let pendingEmail = "", pendingPassword = "", pendingSession = "";
+
+function showAuthForm(name){
+  show($("#formSignin"), name==="signin");
+  show($("#formSignup"), name==="signup");
+  show($("#formConfirm"), name==="confirm");
+  show($("#formNewPw"),  name==="newpw");
+  show($("#authTabs"), name==="signin" || name==="signup");
+  $$("#authTabs .tab").forEach(t => t.classList.toggle("on", t.dataset.tab===name));
+  setMsg($("#authMsg"), "");
+}
+$$("#authTabs .tab").forEach(t => t.addEventListener("click", () => showAuthForm(t.dataset.tab)));
+
+async function submitting(form, fn){
+  const btn = $("button[type=submit]", form); btn.disabled = true;
+  try{ await fn(); } catch(e){ setMsg($("#authMsg"), friendly(e)); }
+  finally{ btn.disabled = false; }
+}
+
+async function signIn(email, password){
+  const r = await cognito("InitiateAuth", {
+    AuthFlow: "USER_PASSWORD_AUTH", ClientId: CONFIG.clientId,
+    AuthParameters: { USERNAME: email, PASSWORD: password }
+  });
+  if(r.ChallengeName === "NEW_PASSWORD_REQUIRED"){
+    pendingEmail = email; pendingSession = r.Session; showAuthForm("newpw"); return;
+  }
+  if(r.ChallengeName){ throw new Error("Unsupported sign-in challenge: " + r.ChallengeName + " (MFA is not handled in this simple UI)."); }
+  saveAuthResult(r.AuthenticationResult);
+  enterApp();
+}
+
+$("#formSignin").addEventListener("submit", e => { e.preventDefault();
+  submitting(e.target, async () => {
+    const email = $("#siEmail").value.trim(), pw = $("#siPass").value;
+    try{ await signIn(email, pw); }
+    catch(err){
+      if(err.code === "UserNotConfirmedException"){
+        pendingEmail = email; $("#confirmEmail").textContent = email; showAuthForm("confirm");
+        setMsg($("#authMsg"), "Your account is not verified yet. Enter the code we emailed you.", "ok");
+      } else throw err;
+    }
+  });
+});
+
+$("#formSignup").addEventListener("submit", e => { e.preventDefault();
+  submitting(e.target, async () => {
+    const email = $("#suEmail").value.trim(), pw = $("#suPass").value;
+    await cognito("SignUp", { ClientId: CONFIG.clientId, Username: email, Password: pw,
+      UserAttributes: [{Name:"email", Value: email}] });
+    pendingEmail = email; pendingPassword = pw;
+    $("#confirmEmail").textContent = email; showAuthForm("confirm");
+    setMsg($("#authMsg"), "Account created. Check your email for the code.", "ok");
+  });
+});
+
+$("#formConfirm").addEventListener("submit", e => { e.preventDefault();
+  submitting(e.target, async () => {
+    await cognito("ConfirmSignUp", { ClientId: CONFIG.clientId, Username: pendingEmail,
+      ConfirmationCode: $("#cfCode").value.trim() });
+    if(pendingPassword){ await signIn(pendingEmail, pendingPassword); pendingPassword = ""; }
+    else { showAuthForm("signin"); setMsg($("#authMsg"), "Verified. You can sign in now.", "ok"); }
+  });
+});
+$("#resendBtn").addEventListener("click", async () => {
+  try{ await cognito("ResendConfirmationCode", { ClientId: CONFIG.clientId, Username: pendingEmail });
+       setMsg($("#authMsg"), "A new code was sent.", "ok"); }
+  catch(e){ setMsg($("#authMsg"), friendly(e)); }
+});
+
+$("#formNewPw").addEventListener("submit", e => { e.preventDefault();
+  submitting(e.target, async () => {
+    const r = await cognito("RespondToAuthChallenge", {
+      ClientId: CONFIG.clientId, ChallengeName: "NEW_PASSWORD_REQUIRED", Session: pendingSession,
+      ChallengeResponses: { USERNAME: pendingEmail, NEW_PASSWORD: $("#npPass").value }
+    });
+    saveAuthResult(r.AuthenticationResult); enterApp();
+  });
+});
+
+function signOut(){
+  tokens = null; store.clear(); todos = [];
+  show($("#app"), false); show($("#auth"), true); showAuthForm("signin");
+  $("#siPass").value = "";
+}
+$("#signoutBtn").addEventListener("click", signOut);
+
+function enterApp(){
+  const c = decodeJwt(tokens.id) || {};
+  $("#whoEmail").textContent = c.email || c["cognito:username"] || "user";
+  $("#today").textContent = new Date().toLocaleDateString(undefined, {weekday:"long", month:"long", day:"numeric"});
+  show($("#auth"), false); show($("#app"), true);
+  load();
+}
+
+/* ============================= start ============================= */
+if(CONFIG.clientId.startsWith("PASTE_")){
+  show($("#auth"), true);
+  setMsg($("#authMsg"), "Set your Cognito App client ID in CONFIG at the top of the script in index.html.");
+} else if(tokens){ enterApp(); }
+else { show($("#auth"), true); showAuthForm("signin"); }
+</script>
+</body>
+</html>
