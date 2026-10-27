@@ -87,7 +87,6 @@ Numbers match the circles in the architecture diagram.
 | AWS Lambda (x2) | CRUD handler; DynamoDB Streams consumer |
 | Amazon DynamoDB | On-demand table, GSI, Streams |
 | AWS X-Ray | Distributed tracing and service map |
-| Amazon CloudWatch + SNS | Logs, dashboard, alarms, email notifications |
 | AWS IAM | Least-privilege roles per function |
 
 ## Design Decisions
