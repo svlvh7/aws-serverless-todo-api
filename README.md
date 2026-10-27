@@ -122,7 +122,7 @@ Numbers match the circles in the architecture diagram.
 - Least-privilege IAM roles scoped to the table and index ARNs
 - API Gateway usage plan and stage throttling limit abuse per client
 - HTTPS only; no secrets in the repo
-a
+
 
 ## Testing and Evidence
 
