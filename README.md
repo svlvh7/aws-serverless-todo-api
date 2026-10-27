@@ -20,7 +20,6 @@ A serverless REST API for managing to-do items, secured with Amazon Cognito and 
 - [API Reference](#api-reference)
 - [Security](#security)
 - [Testing and Evidence](#testing-and-evidence)
-- [Repository Structure](#repository-structure)
 - [Lessons Learned](#lessons-learned)
 
 ## Solution Overview
@@ -167,17 +166,6 @@ Details and Well-Architected Security Pillar mapping: [`docs/security.md`](docs/
 | Stream triggers Lambda 2 | log line in CloudWatch | | screenshot |
 
 
-## Repository Structure
-
-```
-├── README.md
-├── architecture.png
-├── architecture.pdf
-├── source/lambda/        # Lambda functions (todo-crud, stream-processor)
-├── source/frontend/      # static site
-├── deployment/           # exported configs and policies
-└── docs/                 # guides, screenshots, cost analysis
-```
 
 ## Lessons Learned
 
