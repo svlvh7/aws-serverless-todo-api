@@ -32,7 +32,7 @@ REST API. There are no servers to manage, and the stack scales to zero when idle
 - **Compute:** a Lambda function (Python) handling GET, POST, PUT and DELETE on `/todos`.
 - **Data:** a DynamoDB table (`userID` partition key, `todoID` sort key) with on-demand capacity.
 - **Protection:** AWS WAF on CloudFront with AWS managed rule sets
-  (common, known bad inputs, SQL injection, IP reputation).
+  (common known bad inputs, SQL injection, IP reputation).
 - **Observability:** X-Ray tracing, and WAF logs in CloudWatch Logs.
 
 **What it demonstrates**
