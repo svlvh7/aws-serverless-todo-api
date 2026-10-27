@@ -131,7 +131,6 @@ Numbers match the circles in the architecture diagram.
 | Request without token | 401 | 401 | [View Screenshot](./screenshots/without-token.png) |
 | Request with valid ID token | 201 | 201 | [View Screenshot](./screenshots/with-token.png) |
 | User A cannot read User B's tasks | empty / 404 | — | [View Screenshot](./screenshots/isolation-test.png) |
-| Rate limit exceeded | 403 from WAF | — | [View Screenshot](./screenshots/rate-limit.png) |
 | Stream triggers Lambda 2 | log line in CloudWatch | — | [View Screenshot](./screenshots/cloudwatch-logs.png) |
 
 
