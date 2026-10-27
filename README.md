@@ -122,14 +122,3 @@ https://lucid.app/lucidchart/2733f9d1-730d-4e13-ad8b-ea3f0b4b05a9/edit?viewport_
 - HTTPS only; no secrets in the repo
 
 
-## Testing and Evidence
-
-| Test | Expected | Result | Evidence |
-| :--- | :---: | :---: | :--- |
-| Request without token | 401 | 401 | [View Screenshot](./screenshots/without-token.png) |
-| Request with valid ID token | 201 | 201 | [View Screenshot](./screenshots/with-token.png) |
-| User A cannot read User B's tasks | empty / 404 | — | [View Screenshot](./screenshots/isolation-test.png) |
-| Stream triggers Lambda 2 | log line in CloudWatch | — | [View Screenshot](./screenshots/cloudwatch-logs.png) |
-
-
-
