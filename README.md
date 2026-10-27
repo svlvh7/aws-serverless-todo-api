@@ -15,7 +15,6 @@ A serverless REST API for managing to-do items, secured with Amazon Cognito and 
 - [Architecture Diagram](#architecture-diagram)
 - [Request Flow](#request-flow)
 - [AWS Services Used](#aws-services-used)
-- [Design Decisions](#design-decisions)
 - [Data Model](#data-model)
 - [API Reference](#api-reference)
 - [Security](#security)
@@ -103,19 +102,6 @@ Numbers match the circles in the architecture diagram.
 | AWS X-Ray | Distributed tracing and service map |
 | AWS IAM | Least-privilege roles per function |
 
-## Design Decisions
-
-<!-- One short paragraph each. This is the section that shows Solutions Architect thinking. -->
-
-- **Why serverless:** ...
-- **Why DynamoDB on-demand:** ...
-- **Why CloudFront in front of API Gateway:** ...
-- **Why OAC and a private bucket:** ...
-- **Why a Cognito User Pool authorizer:** ... (REST APIs use User Pool authorizers with the ID token; JWT authorizers are an HTTP API feature)
-- **Why Lambda outside a VPC:** ...
-- **Why arm64 Lambda:** ...
-- **WAF scope and bot protection:** Rate-based rule and the Common rule set are used as the low-cost mitigation. WAF Bot Control and geo blocking were considered; Bot Control carries a separate subscription cost, and geo blocking is a one-rule addition for production. ...
-- **Trade-offs and what I would change for production:** ...
 
 
 ## API Reference
