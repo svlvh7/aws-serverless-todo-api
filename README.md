@@ -55,7 +55,7 @@ https://lucid.app/lucidchart/2733f9d1-730d-4e13-ad8b-ea3f0b4b05a9/edit?viewport_
 1. **User opens the site** from the internet at the CloudFront domain.
 2. **CloudFront + AWS WAF.** Every request is inspected by AWS WAF (global scope,
    us-east-1) before it is served. and the
-   AWS managed rule sets: Common, Known Bad Inputs, SQL injection and Amazon IP
+   AWS managed rule sets. Common Known Bad Inputs, SQL injection and Amazon IP
    reputation. Blocked requests receive `403` and never reach the origins.
 3. **Static content.** The default CloudFront behavior serves the single-page app
    (HTML/JS) from a private **S3** bucket through Origin Access Control. (verify)
