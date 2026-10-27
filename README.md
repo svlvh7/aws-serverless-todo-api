@@ -19,9 +19,6 @@ A serverless REST API for managing to-do items, secured with Amazon Cognito and 
 - [Data Model](#data-model)
 - [API Reference](#api-reference)
 - [Security](#security)
-- [Observability](#observability)
-- [Cost Analysis](#cost-analysis)
-- [Deployment Guide](#deployment-guide)
 - [Testing and Evidence](#testing-and-evidence)
 - [Repository Structure](#repository-structure)
 - [Lessons Learned](#lessons-learned)
@@ -158,29 +155,6 @@ Full details and examples: [`docs/api-reference.md`](docs/api-reference.md) · O
 
 Details and Well-Architected Security Pillar mapping: [`docs/security.md`](docs/security.md)
 
-## Observability
-
-- X-Ray service map: ![service map](docs/screenshots/xx-xray-service-map.png)
-- CloudWatch dashboard: ![dashboard](docs/screenshots/xx-cloudwatch-dashboard.png)
-- Alarms: API 5xx and Lambda errors notify via SNS email
-- Log retention set to 7 days to control cost
-
-## Cost Analysis
-
-| Component | Estimated | Actual |
-|---|---|---|
-| WAF (1 ACL + 2 rules, short window) | | |
-| API Gateway cache (test window only) | | |
-| Everything else (Lambda, DynamoDB, S3, CloudFront, Cognito, X-Ray) | | |
-| **Total** | | |
-
-How costs were controlled (budgets, short-lived WAF and cache, 7-day log retention, no VPC/NAT): [`docs/cost-analysis.md`](docs/cost-analysis.md)
-
-## Deployment Guide
-
-This project was built manually in the AWS Console. Step-by-step instructions with the reasoning behind each choice: [`docs/deployment-guide.md`](docs/deployment-guide.md)
-
-Exported configurations for reproducibility are in [`deployment/`](deployment/).
 
 ## Testing and Evidence
 
