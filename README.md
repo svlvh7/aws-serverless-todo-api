@@ -51,7 +51,6 @@ https://lucid.app/lucidchart/2733f9d1-730d-4e13-ad8b-ea3f0b4b05a9/edit?viewport_
 
 ## Request Flow
 
-Numbers match the circles in the architecture diagram.
 
 1. **User opens the site** from the internet at the CloudFront domain.
 2. **CloudFront + AWS WAF.** Every request is inspected by AWS WAF (global scope,
