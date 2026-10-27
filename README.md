@@ -140,7 +140,6 @@ Numbers match the circles in the architecture diagram.
 | PUT | `/todos/{id}` | Update a task | Cognito ID token |
 | DELETE | `/todos/{id}` | Delete a task | Cognito ID token |
 
-Full details and examples: [`docs/api-reference.md`](docs/api-reference.md) · OpenAPI export: [`deployment/openapi.yaml`](deployment/openapi.yaml)
 
 ## Security
 
@@ -151,9 +150,7 @@ Full details and examples: [`docs/api-reference.md`](docs/api-reference.md) · O
 - Least-privilege IAM roles scoped to the table and index ARNs
 - API Gateway usage plan and stage throttling limit abuse per client
 - HTTPS only; no secrets in the repo
-
-Details and Well-Architected Security Pillar mapping: [`docs/security.md`](docs/security.md)
-
+a
 
 ## Testing and Evidence
 
